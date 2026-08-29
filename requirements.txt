@@ -13,5 +13,5 @@ pydantic>=2.7.0
 python-dotenv>=1.0.1
 pyyaml>=6.0.1
 
-# Rapid UI Framework
-streamlit>=1.35.0
+
+duckduckgo-search
