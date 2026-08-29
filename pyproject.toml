@@ -12,7 +12,7 @@ dependencies = [
     "langgraph",
     "tavily-python",
     "duckduckgo-search",
-    "python-dotenv"
+    "python-dotenv",
     'duckduckgo_search'
 ]
 
