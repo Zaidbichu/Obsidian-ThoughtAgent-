@@ -13,6 +13,7 @@ dependencies = [
     "tavily-python",
     "duckduckgo-search",
     "python-dotenv"
+    'duckduckgo_search'
 ]
 
 [tool.uv]
