@@ -1,0 +1,28 @@
+[project]
+name = "obsidian-reseaarch-agent"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Zaid", email = "zaidbichu4@gmail.com" }
+]
+requires-python = ">=3.11"
+dependencies = [
+    "langchain>=0.2.0",
+    "langchain-community>=0.2.0",
+    "langchain-openai>=0.1.8",
+    "langgraph>=0.1.5",
+    "pydantic>=2.7.0",
+    "python-dotenv>=1.0.1",
+    "pyyaml>=6.0.1",
+    "requests>=2.31.0",
+    "streamlit>=1.35.0",
+    "tavily-python>=0.3.3",
+]
+
+[project.scripts]
+obsidian-reseaarch-agent = "obsidian_reseaarch_agent:main"
+
+[build-system]
+requires = ["uv_build>=0.12.3,<0.13.0"]
+build-backend = "uv_build"

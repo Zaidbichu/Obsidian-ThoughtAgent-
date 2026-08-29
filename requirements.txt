@@ -1,0 +1,17 @@
+# Core Frameworks & LLM Integrations
+langchain>=0.2.0
+langchain-community>=0.2.0
+langchain-openai>=0.1.8
+langgraph>=0.1.5
+
+# Tools & APIs
+tavily-python>=0.3.3
+requests>=2.31.0
+
+# Data Models & Utilities
+pydantic>=2.7.0
+python-dotenv>=1.0.1
+pyyaml>=6.0.1
+
+# Rapid UI Framework
+streamlit>=1.35.0
