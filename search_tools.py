@@ -3,7 +3,10 @@ from typing import List, Dict, Any, Optional
 from dotenv import load_dotenv
 from langchain.tools import tool
 from tavily import TavilyClient
-from duckduckgo_search import DDGS
+try:
+    from duckduckgo_search import DDGS
+except ImportError:
+    from ddgs import DDGS
 
 @tool
 def fetch_web_search(query: str, tavily_api_key: Optional[str] = None, max_results: int = 5) -> List[Dict[str, Any]]:
