@@ -2,7 +2,6 @@
 
 Obsidian ThoughtAgent is an autonomous multi-agent research assistant that gathers live web information, synthesizes technical insights, and formats knowledge notes directly into Obsidian-native Markdown files complete with YAML frontmatter and internal [[WikiLinks]].
 
-> NOTE: This README is intentionally generic and aims to be a helpful starting point. Replace placeholders (in ALL CAPS or BETWEEN < >) with actual values specific to this repository.
 
 ## Project Overview
 
