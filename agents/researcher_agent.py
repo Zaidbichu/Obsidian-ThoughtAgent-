@@ -3,40 +3,45 @@ from typing import Dict, Any
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from search_tools import fetch_web_search
-
-
-
 from utils.model_factory import get_llm
 
 def run_research_agent(state: dict, config: dict = None) -> dict:
     config = config or {}
     
-    # Dynamically initialize LLM using runtime config from app.py
-    llm = get_llm(
-        provider=config.get("provider", "ollama"),
-        model_name=config.get("model_name"),
-        api_key=config.get("api_key")
-    )
-    topic = state.get("topic", "")
-    tavily_key = state.get("tavily_api_key", "")
-    openai_key = state.get("openai_api_key", "")
-    temp = state.get("temperature", 0.2)
+    # 1. Extract inputs correctly
+    # Use 'query' (matches app.py state key) and fallback to 'topic'
+    query = state.get("query") or state.get("topic", "")
+    
+    # Extract keys and parameters from runtime `config` passed by app.py
+    tavily_key = config.get("tavily_key", "")
+    provider = config.get("provider", "ollama")
+    model_name = config.get("model_name")
+    api_key = config.get("api_key")
 
-    # 1. Execute search directly
+    # 2. Dynamically initialize LLM using runtime config
+    llm = get_llm(
+        provider=provider,
+        model_name=model_name,
+        api_key=api_key
+    )
+
+    # 3. Execute search tool
     raw_results = fetch_web_search.invoke({
-        "query": topic, 
+        "query": query, 
         "tavily_api_key": tavily_key,
         "max_results": 5
     })
 
-    # 2. Extract content snippets
+    # 4. Extract content snippets safely
     snippets = []
-    for r in raw_results:
-        snippets.append(f"Title: {r.get('title')}\nURL: {r.get('url')}\nContent: {r.get('content')}\n")
-    search_context = "\n---\n".join(snippets)
+    if isinstance(raw_results, list):
+        for r in raw_results:
+            if isinstance(r, dict):
+                snippets.append(f"Title: {r.get('title', 'N/A')}\nURL: {r.get('url', 'N/A')}\nContent: {r.get('content', '')}\n")
+    
+    search_context = "\n---\n".join(snippets) if snippets else "No search results found."
 
-  
-
+    # 5. Build prompt and execute chain
     prompt = ChatPromptTemplate.from_messages([
         (
             "system",
@@ -49,9 +54,10 @@ def run_research_agent(state: dict, config: dict = None) -> dict:
     ])
 
     chain = prompt | llm | StrOutputParser()
-    summary = chain.invoke({"topic": topic, "context": search_context})
+    summary = chain.invoke({"topic": query, "context": search_context})
 
+    # 6. Return standard keys expected by GraphState & synthesizer agent
     return {
         "search_results": raw_results,
-        "synthesis": summary
+        "research_data": summary
     }
