@@ -1,30 +1,41 @@
 import os
-from langchain_ollama import ChatOllama
+from typing import Optional
 from langchain_openai import ChatOpenAI
+from langchain_ollama import ChatOllama
 
-
-def get_llm(openai_api_key: str = "", temperature: float = 0.2):
+def get_llm(
+    provider: str = "ollama",
+    model_name: Optional[str] = None,
+    api_key: Optional[str] = None
+):
     """
-    Dynamically returns ChatOpenAI if a key is provided,
-    otherwise returns local ChatOllama.
+    Instantiates and returns the configured LLM instance.
     """
-    key_str = (openai_api_key or "").strip()
-
-    if key_str:
-        # Assign key to environment to ensure inner client handles it
-        os.environ["OPENAI_API_KEY"] = key_str
-        return ChatOpenAI(
-            model="gpt-4o-mini",
-            api_key=key_str,
-            temperature=temperature
-        )
-    else:
-        # Assign dummy key to environment to prevent ChatOpenAI/LangChain 
-        # validation checks from throwing missing credentials errors
-        os.environ["OPENAI_API_KEY"] = "ollama-local-dummy-key"
+    provider = provider.lower()
+    
+    if provider == "openai":
+        # Resolve key: user input > environment variable
+        resolved_key = (api_key.strip() if api_key else None) or os.getenv("OPENAI_API_KEY")
         
-        return ChatOllama(
-            model="gemma3:4b",  # Or qwen3:8b
-            temperature=temperature,
-            base_url="http://localhost:11434"
+        if not resolved_key:
+            raise ValueError("OpenAI API Key is required. Please provide it in the sidebar.")
+        
+        # Ensure a valid OpenAI model string is used
+        valid_models = ["gpt-4o-mini", "gpt-4o", "gpt-4-turbo"]
+        selected_model = model_name if model_name in valid_models else "gpt-4o-mini"
+        
+        return ChatOpenAI(
+            model=selected_model,
+            api_key=resolved_key,
+            temperature=0.7
         )
+
+    elif provider == "ollama":
+        selected_model = model_name or "llama3"
+        return ChatOllama(
+            model=selected_model,
+            temperature=0.7
+        )
+
+    else:
+        raise ValueError(f"Unsupported provider: '{provider}'")
