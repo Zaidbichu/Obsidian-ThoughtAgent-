@@ -1,55 +1,51 @@
-from datetime import datetime
 from typing import Dict, Any
+from datetime import datetime
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
-from utils.model_refactory import get_llm
+from utils.model_factory import get_llm
 
-
-def run_obsidian(state: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Formats the synthesis into an Obsidian Markdown document with WikiLinks and references.
-    """
-    topic = state.get("topic", "")
-    synthesis = state.get("synthesis", "")
-    search_results = state.get("search_results", [])
-    openai_key = state.get("openai_api_key", "")
-    temp = state.get("temperature", 0.2)
-
-    llm = get_llm(openai_api_key=openai_key, temperature=temp)
-
-    reference_block = "\n".join([
-        f"- [{item.get('title')}]({item.get('url')})"
-        for item in search_results if item.get("url")
-    ])
-
-    prompt_template = ChatPromptTemplate.from_messages([
+def run_obsidian(state: Dict[str, Any], config: Dict[str, Any] = None) -> Dict[str, Any]:
+    config = config or {}
+    
+    # 1. Read input state (outputted by synthesizer_agent)
+    query = state.get("query") or state.get("topic", "")
+    synthesized_text = state.get("synthesized_text", "")
+    
+    # 2. Instantiate LLM dynamically using runtime config
+    llm = get_llm(
+        provider=config.get("provider", "ollama"),
+        model_name=config.get("model_name"),
+        api_key=config.get("api_key")
+    )
+    
+    current_date = datetime.now().strftime("%Y-%m-%d")
+    
+    # 3. Prompt setup for Obsidian Vault markdown formatting
+    prompt = ChatPromptTemplate.from_messages([
         (
             "system",
-            "You are an Obsidian Knowledge Management Expert. Format research syntheses into standard "
-            "Obsidian Markdown files with YAML frontmatter and [[WikiLinks]]."
+            "You are an expert Obsidian Knowledge Graph Architect. Convert the input analysis into a fully "
+            "formatted Obsidian Markdown note.\n\n"
+            "Requirements:\n"
+            "1. Must start with YAML Frontmatter containing title, date ({date}), and relevant tags.\n"
+            "2. Use clean markdown headings (##, ###).\n"
+            "3. Enclose important core technical terms and topics inside [[WikiLinks]] so they link to other vault notes.\n"
+            "4. Do NOT wrap your whole response in a python code block; output raw markdown content."
         ),
         (
             "human",
-            "Topic: {topic}\n"
-            "Date: {date}\n\n"
-            "Rules:\n"
-            "1. Output exact YAML frontmatter at top: title, date, tags (e.g. [research, ai]), status.\n"
-            "2. Wrap important technical concepts in double brackets (e.g., [[Vector Databases]]).\n"
-            "3. Use structured markdown headers (##, ###).\n"
-            "4. Append a '## References' section at the bottom.\n\n"
-            "Synthesis:\n{synthesis}\n\n"
-            "References:\n{references}"
+            "Topic: {topic}\n\nSynthesized Content:\n{content}"
         )
     ])
-
-    current_date = datetime.now().strftime("%Y-%m-%d")
-
-    chain = prompt_template | llm | StrOutputParser()
-    response = chain.invoke({
-        "topic": topic,
-        "date": current_date,
-        "synthesis": synthesis,
-        "references": reference_block if reference_block else "- Web Research Session"
+    
+    chain = prompt | llm | StrOutputParser()
+    final_output = chain.invoke({
+        "topic": query,
+        "content": synthesized_text,
+        "date": current_date
     })
-
-    return {"obsidian_md": response}
+    
+    # 4. Return final output state key
+    return {
+        "final_output": final_output
+    }
