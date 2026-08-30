@@ -3,13 +3,20 @@ from typing import Dict, Any
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from search_tools import fetch_web_search
-from utils.model_refactory import get_llm
 
 
-def run_research_agent(state: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Executes web search directly and summarizes findings.
-    """
+
+from utils.model_factory import get_llm
+
+def run_research_agent(state: dict, config: dict = None) -> dict:
+    config = config or {}
+    
+    # Dynamically initialize LLM using runtime config from app.py
+    llm = get_llm(
+        provider=config.get("provider", "ollama"),
+        model_name=config.get("model_name"),
+        api_key=config.get("api_key")
+    )
     topic = state.get("topic", "")
     tavily_key = state.get("tavily_api_key", "")
     openai_key = state.get("openai_api_key", "")
@@ -28,8 +35,7 @@ def run_research_agent(state: Dict[str, Any]) -> Dict[str, Any]:
         snippets.append(f"Title: {r.get('title')}\nURL: {r.get('url')}\nContent: {r.get('content')}\n")
     search_context = "\n---\n".join(snippets)
 
-    # 3. Get LLM (Ollama or OpenAI)
-    llm = get_llm(openai_api_key=openai_key, temperature=temp)
+  
 
     prompt = ChatPromptTemplate.from_messages([
         (
