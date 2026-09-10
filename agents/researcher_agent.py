@@ -3,7 +3,7 @@ from typing import Dict, Any
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from search_tools import fetch_web_search
-from utils.model_factory import get_llm
+from utils.model_refactory import get_llm
 
 def run_research_agent(state: dict, config: dict = None) -> dict:
     config = config or {}
