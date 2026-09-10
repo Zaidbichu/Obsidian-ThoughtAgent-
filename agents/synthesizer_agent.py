@@ -1,7 +1,7 @@
 from typing import Dict, Any
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
-from utils.model_factory import get_llm
+from utils.model_refactory import get_llm
 
 def run_synthesizer_agent(state: Dict[str, Any], config: Dict[str, Any] = None) -> Dict[str, Any]:
     config = config or {}
